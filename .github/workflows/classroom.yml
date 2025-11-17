@@ -1,0 +1,149 @@
+name: Autograding Tests
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feat/*'
+  pull_request: {}
+  repository_dispatch: {}
+permissions:
+  checks: write
+  actions: read
+  contents: write
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ---------------------------------------------------------
+      # 1. TESTS EXERCICES
+      # ---------------------------------------------------------
+      - name: EXERCICE_1
+        id: EXERCICE_1
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_1
+          setup-command: npm ci
+          command: npm run test tests/exercice-1.test.js
+          timeout: 10
+          max-score: 1
+
+      - name: EXERCICE_2
+        id: EXERCICE_2
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_2
+          setup-command: npm ci
+          command: npm run test tests/exercice-2.test.js
+          timeout: 10
+          max-score: 1
+
+      - name: EXERCICE_3
+        id: EXERCICE_3
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_3
+          setup-command: npm ci
+          command: npm run test tests/exercice-3.test.js
+          timeout: 10
+          max-score: 1
+
+      - name: EXERCICE_4
+        id: EXERCICE_4
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_4
+          setup-command: npm ci
+          command: npm run test tests/exercice-4.test.js
+          timeout: 10
+          max-score: 1
+
+      - name: EXERCICE_5
+        id: EXERCICE_5
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_5
+          setup-command: npm ci
+          command: npm run test tests/exercice-5.test.js
+          timeout: 10
+          max-score: 1
+
+      - name: EXERCICE_6
+        id: EXERCICE_6
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EXERCICE_6
+          setup-command: npm ci
+          command: npm run test tests/exercice-6.test.js || echo "No test file"
+          timeout: 10
+          max-score: 1
+
+      # ---------------------------------------------------------
+      # 2. AUTOGRADING REPORTER — VERSION FINALE
+      # ---------------------------------------------------------
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          EXERCICE_1_RESULTS: "${{ steps.EXERCICE_1.outputs.result }}"
+          EXERCICE_2_RESULTS: "${{ steps.EXERCICE_2.outputs.result }}"
+          EXERCICE_3_RESULTS: "${{ steps.EXERCICE_3.outputs.result }}"
+          EXERCICE_4_RESULTS: "${{ steps.EXERCICE_4.outputs.result }}"
+          EXERCICE_5_RESULTS: "${{ steps.EXERCICE_5.outputs.result }}"
+          EXERCICE_6_RESULTS: "${{ steps.EXERCICE_6.outputs.result }}"
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          runners: "EXERCICE_1,EXERCICE_2,EXERCICE_3,EXERCICE_4,EXERCICE_5,EXERCICE_6"
+
+      # ---------------------------------------------------------
+      # 3. WRITE FEEDBACK
+      # ---------------------------------------------------------
+      - name: Write feedback file
+        id: write_feedback
+        run: |
+          cat > feedback.md <<'EOF'
+          Autograding feedback
+          Repository: ${{ github.repository }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+
+          Results:
+          EXERCICE_1: ${{ steps.EXERCICE_1.outputs.result }}
+          EXERCICE_2: ${{ steps.EXERCICE_2.outputs.result }}
+          EXERCICE_3: ${{ steps.EXERCICE_3.outputs.result }}
+          EXERCICE_4: ${{ steps.EXERCICE_4.outputs.result }}
+          EXERCICE_5: ${{ steps.EXERCICE_5.outputs.result }}
+          EXERCICE_6: ${{ steps.EXERCICE_6.outputs.result }}
+          EOF
+
+      # ---------------------------------------------------------
+      # 4. COMMIT FEEDBACK
+      # ---------------------------------------------------------
+      - name: Commit and push feedback
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]' && github.actor != 'github-classroom[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feedback.md -f
+          git commit -m "Add autograding feedback for ${{ github.sha }}" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref_name }}
+
