@@ -17,5 +17,31 @@
 
 
 // Fonctions attendues par l'exercice
+const BASE_URL = 'https://jsonplaceholder.typicode.com';
+async function recuperation(url) {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
+}
+
+async function fetchPost(url = `${BASE_URL}/posts/1`) {
+    const post = await recuperation(url);
+    return post;
+}
+
+async function fetchPostAndAuthor(url) {
+
+    const post = await fetchPost(url);
+
+    const author = await recuperation(`${BASE_URL}/users/${post.userId}`);
+
+    console.log(`Titre du post : ${post.title}`);
+    console.log(`Auteur : ${author.name}`);
+
+    return { post, author };
+}
+
+
+
 
 module.exports = { fetchPost, fetchPostAndAuthor };

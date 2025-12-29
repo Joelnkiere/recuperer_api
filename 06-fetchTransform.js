@@ -11,7 +11,23 @@
  * - Afficher ce nouvel objet transformé
  */
 
+const BASE_URL = 'https://jsonplaceholder.typicode.com';
 
+async function fetchPost(url = `${BASE_URL}/posts/3`) {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
+}
 
+async function fetchAndTransformPost(url) {
+    const post = await fetchPost(url);
+    const transformedPost = {
+        title: post.title.toUpperCase(),
+        bodyLength: post.body.length,
+        label: 'STATUT_OK'
+    };
+    console.log('Transformed post:', transformedPost);
+    return transformedPost;
+}
 
 module.exports = { fetchPost, fetchAndTransformPost };

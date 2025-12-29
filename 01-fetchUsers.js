@@ -21,14 +21,15 @@ async function fetchUsers(url) {
 }
 
 async function fetchAndCountUsers(url) {
-  try {
-	const users = await fetchUsers(url);
+	try {
+		const users = await fetchUsers(url);
 
-	console.log(`Nombre total de users : ${users.length}`);
-	console.log(`Premier user : ${users[0].name}`);
-  } catch (error) {
-	console.log('Erreur :', error);
-  }
+		console.log(`Nombre total de users : ${users.length}`);
+		console.log(`Premier user : ${users[0].name}`);
+
+	} catch (error) {
+		console.log('Erreur :', error);
+	}
 }
 
 fetchAndCountUsers(urlPosts);
